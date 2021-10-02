@@ -1,0 +1,48 @@
+﻿@*To use HttpContextAccessor.HttpContext.Session*@
+@inject IHttpContextAccessor HttpContextAccessor
+
+@using AspNet5.AppLib.StartupExt
+@using Microsoft.AspNetCore.Http
+
+<div class="container-lg">
+
+    <div class="row">
+
+        <div class="col">
+
+            <div class="jumbotron">
+
+                <table class="table table-hover">
+                    <tr>
+                        <th>Session ID</th>
+                        <th>Timestamp (UTC)</th>
+                        <th>Timestamp (Local Time)</th>
+                    </tr>
+                    <tr>
+                        <td>@HttpContextAccessor.HttpContext.Session.Id</td>
+                        <td>@(HttpContextAccessor.HttpContext.Session.GetKey<DateTime>("LOGIN_DATETIME").ToString("dd.MM.yyyy HH:mm:ss fffffff UTC"))</td>
+                        <td>@(HttpContextAccessor.HttpContext.Session.GetKey<DateTime>("LOGIN_DATETIME").ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss fffffff"))</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3">
+                            @System.TimeZoneInfo.Local.StandardName (@System.TimeZoneInfo.Local.DaylightName GMT +@System.TimeZoneInfo.Local.BaseUtcOffset)
+                        </td>
+                    </tr>
+                </table>
+
+            </div>
+
+            <hr />
+
+            <p>Your IP Address is @ViewBag.ClientIP</p>
+            <p>Cached DateTime is @ViewBag.CachedDateTime</p>
+
+        </div>
+    </div>
+
+</div>
+
+<environment names="Development,Staging"></environment>
+<environment names="Production"></environment>
+<environment include="Development"></environment>
+<environment exclude="Development"></environment>

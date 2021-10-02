@@ -1,0 +1,50 @@
+﻿@*
+    Step 1. Layout
+    Create a folder called "Shared" in your Blazor application.
+    Right-click on the "Shared" folder and select "Add..." -> "New Item".
+    You should find that there is an option to create a Razor Component.
+    Call it Layout.razor and press the "Add" button.
+    ----
+    With your layout file, you need to inherit the "LayoutComponentBase" class.
+    This comes from the "Microsoft.AspNetCore.Components" assembly and calling the @Body method will basically render
+    different content depending on which page you are on. It's a bit like the @RenderBody() method used in MVC.
+
+    Step 2. App
+    Next, you need to create the app for Blazor.
+    Go into the root of your project and create a Razor component.
+    Call it App.razor.
+
+    The "Microsoft.AspNetCore.Components" assembly comes into force again with this file.
+    We need to use the Router class within that and state the assembly that the application is part of.
+    We get the assembly from the Program class.
+
+    Inside the Router class, we have to specify a Found and NotFound.
+    The Found class needs to include a reference to our Layout file that we just created.
+
+    Step 3. Pages
+    Now, we can go ahead and create the pages for our Blazor app. In our Startup.cs file, we've added the following line:
+
+        endpoints.MapFallbackToPage("/_Host");
+
+    We now need to go ahead and create the page. Create a folder called "Pages", and then add a new item.
+    This time, rather than creating a Razor component, we need to create a Razor Page
+
+    Call it _Host.cshtml and click add. This file basically sets up the SPA.
+    It provides us with our base HTML and where about's in our code we want the Blazor app to run.
+    You may notice that we are calling a reference to "blazor.server.js".
+    As stated earlier, this file allows for communication between the client and the server.
+    This file should already be bundled into the framework.
+
+    Now we can go ahead and create the pages (in Pages folder).
+    You may notice that a @page reference to these files. This basically dictates the URL of when this content is rendered.
+
+*@
+
+
+@inherits LayoutComponentBase
+
+<p>Layout</p>
+
+<div class="main">
+    @Body
+</div>

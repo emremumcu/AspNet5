@@ -1,0 +1,28 @@
+﻿@model string
+
+@if (string.IsNullOrEmpty(Model))
+{
+    <form method="post">
+
+        <p>User Name</p>
+        <input type="text" name="username" />
+
+        <p>Password</p>
+        <input type="password" name="password" />
+
+        <hr />
+        <input type="submit" />
+    </form>
+}
+else
+{
+    <p>@Model</p>
+
+    <form asp-controller="JWT" asp-action="AppRequest" method="post">
+
+        <input type="hidden" name="token" value="@Model" />
+
+        <input type="submit" />
+
+    </form>
+}

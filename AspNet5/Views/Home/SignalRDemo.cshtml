@@ -1,0 +1,72 @@
+﻿
+<h3>SignalR Demo</h3>
+
+<hr />
+
+<div class="container">
+
+    <div class="row">
+
+        <div class="col-3">
+
+            <div class="jumbotron">
+                <h1>Users</h1>
+                <ul class="list-group" id="appusers"></ul>
+            </div>
+
+        </div>
+
+        <div class="col-3">
+            <h1>Message</h1>
+            <textarea class="form-control" id="messageInput" placeholder="Enter message..."></textarea>
+            <br />
+            <button type="button" id="sendButton" class="btn btn-primary">Send Message</button>
+        </div>
+
+        <div class="col-6">
+            <div id="messageslist"></div>
+        </div>
+
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <ul id="applog" class="list-group"></ul>
+        </div>
+    </div>
+</div>
+
+
+
+@section scriptSection {
+
+    <script src="/js/signalr.js"></script>
+    <script src="/js/mainhub.js"></script>
+
+    <script>
+
+        function logger(log) {
+            $("#applog").append("<li>" + log + "</li>");
+        }
+
+        function showMessage(user, message) {
+            var html = '<b>' + user + ':</b> ' + message + '<br/>';
+            $("#messageslist").append(html);
+        }
+
+        function addUser(user) {
+            $("#appusers").append("<li id='" + user + "'>" + user + "</li>");
+        }
+
+        function removeUser(user) {
+            $("#appusers #" + user).remove();
+        }
+
+        function allUsers(list) {
+            $.each(JSON.parse(list), function (key, val) {
+                addUser(val);
+            });
+        }
+
+    </script>
+}

@@ -1,0 +1,24 @@
+﻿@page "/"
+
+@using Microsoft.AspNetCore.Components.Routing
+
+<p>Index</p>
+
+<hr />
+
+<p>Current count: @CurrentTimeStamp</p>
+
+<button class="btn btn-primary" @onclick="GetCurrentTimeStamp">Click me</button>
+
+<a class="btn btn-primary" href="/Home/Index">MVC Home</a> | <a class="btn btn-primary" href="/swagger/index.html">Swagger</a> | <a class="btn btn-primary" href="/DataBinding">Data Binding</a>
+
+@code {
+
+    private string CurrentTimeStamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss:FFF");
+
+    private void GetCurrentTimeStamp()
+    {
+        CurrentTimeStamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm:ss:FFF");
+    }
+
+}

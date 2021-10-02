@@ -1,0 +1,325 @@
+﻿@model string
+
+@section headSection { }
+
+<div class="container-lg">
+
+    <!-- form name & id is used in scripts below -->
+    <form name="editorForm" id="editorForm" method="post" asp-area="admin" asp-controller="Editor" asp-action="Index" asp-antiforgery="true">
+
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(excludePropertyErrors: false)
+        @Html.ValidationMessage("ERR", new { @class = "text-danger" })
+
+        <div style="padding: 25px;">
+
+            <textarea name="editorContent" id="editorContent">@Model</textarea>
+
+            <input type="submit" value="Kaydet" />
+
+        </div>
+
+    </form>
+
+</div>
+
+
+
+
+@section scriptSection {
+
+    <script src="@Url.Content("~/tinymce/tinymce.min.js")"></script>
+
+    <script>
+
+        // https://www.tiny.cloud/docs/quick-start/
+
+        tinymce.init(
+        {
+            selector: '#editorContent',
+            width: '100%',
+            height: 750,
+            plugins:
+            [
+                'advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker',
+                'searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking',
+                'table emoticons template paste help'
+            ],
+            menu:
+            {
+                file: { title: 'File', items: 'newdocument restoredraft | preview | print ' },
+                edit: { title: 'Edit', items: 'undo redo | cut copy paste | selectall | searchreplace' },
+                view: { title: 'View', items: 'code | visualaid visualchars visualblocks | spellchecker | preview fullscreen' },
+                insert: { title: 'Insert', items: 'image link media template codesample inserttable | charmap emoticons hr | pagebreak nonbreaking anchor toc | insertdatetime' },
+                format: { title: 'Format', items: 'bold italic underline strikethrough superscript subscript codeformat | formats blockformats fontformats fontsizes align | forecolor backcolor | removeformat' },
+                tools: { title: 'Tools', items: 'spellchecker spellcheckerlanguage | code wordcount' },
+                table: { title: 'Table', items: 'inserttable | cell row column | tableprops deletetable' },
+                help: { title: 'Help', items: 'help' },
+                myfavs: { title: 'Bana Özel', items: 'code visualaid | searchreplace | spellchecker | emoticons' }
+            },
+            menubar: 'myfavs file edit view insert format tools table help',
+            toolbar: 'CustomImageUpload CustomImageUpload64 HtmlInsertButton InsertDateTimeButton | code | undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons | help',                
+            content_css: 'document', // default - dark - document - writer                
+            // skin: (window.matchMedia("(prefers-color-scheme: dark)").matches ? "oxide-dark" : ""),
+            statusbar: true,
+            file_picker_types: 'image', // 'file image media'
+            paste_data_images: true,
+            images_upload_handler: function (blobInfo, success, failure)
+            {
+                // UploadImage(blobInfo, success, failure);
+                UploadImageBase64(blobInfo, success, failure);
+            },
+            setup: function (editor)
+            {
+                InsertHtmlButton(editor);
+                CustomTextButton(editor);
+                CustomUploadImageButton(editor);
+                CustomUploadImageButton64(editor);
+                ScrollToEnd(editor);
+            },
+            relative_urls: false,
+            remove_script_host: false,
+            convert_urls: true,
+        });
+
+    </script>
+
+
+    <script>
+
+        function GetRequestVerificationToken()
+        {
+            var form = $('#editorForm');
+            var token = $('input[name="__RequestVerificationToken"]', form).val();
+            return token;
+        }
+
+        // TinyMCE Default Image Button
+        // Uploads image and inserts the image as URI
+        function UploadImage(blobInfo, success, failure)
+        {
+            var formData = new FormData();
+            formData.append('img', blobInfo.blob(), blobInfo.blob().name);
+            formData.append('__RequestVerificationToken', GetRequestVerificationToken());
+
+            var imageUploadUrl = '@Url.Content("~/tinymce/image")';
+
+            $.ajax({
+                url: imageUploadUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data, textStatus, jqXHR) {
+                    success(data.location);
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.responseText) {
+                        errors = JSON.parse(jqXHR.responseText).errors;
+                        console.log(errors.join(", "));
+                        console.log(textStatus);
+                        console.log(errorThrown);
+                        alert('Error Upload Image. See logs!');
+                    }
+                }
+            });
+        }
+
+        // TinyMCE Default Image Button
+        // Uploads image and inserts the image as base64 string
+        function UploadImageBase64(blobInfo, success, failure)
+        {
+            var xhr, formData;
+            formData = new FormData();
+            formData.append('img', blobInfo.blob(), blobInfo.blob().name);
+            formData.append('__RequestVerificationToken', GetRequestVerificationToken());
+
+            var imageUploadUrl = '@Url.Content("~/tinymce/image-base64")';
+
+
+
+            xhr = new XMLHttpRequest();
+            xhr.withCredentials = false;
+            xhr.open('POST', imageUploadUrl);
+            xhr.send(formData);
+
+            xhr.onload = function ()
+            {
+                if (xhr.status != 200) { alert(xhr.status); return; }
+
+                var json = JSON.parse(xhr.responseText);
+
+                if (!json || typeof json.imgData != 'string') { alert(xhr.responseText); return; }
+
+                success(json.imgData);
+            };
+        }
+
+        // S: Custom Image Upload URL *******
+
+        function CustomUploadImageButton(editor)
+        {
+            var fileInput = $('<input id="tinymce-uploader" type="file" name="pic" accept="image/*" style="display:none">');
+
+            $(editor.getElement()).parent().append(fileInput);
+
+            editor.ui.registry.addButton('CustomImageUpload', {
+                icon: 'gallery',
+                tooltip: 'Resim Ekle...',
+                onAction: function (_) {
+                    fileInput.trigger('click');
+                }
+            });
+
+            fileInput.on("change", function (e) {
+                CustomUploadImage($(this), editor);
+            });
+        }
+
+        function CustomUploadImageButton64(editor) {
+            var fileInput = $('<input id="tinymce-uploader64" type="file" name="pic64" accept="image/*" style="display:none">');
+
+            $(editor.getElement()).parent().append(fileInput);
+
+            editor.ui.registry.addButton('CustomImageUpload64', {
+                icon: 'gallery',
+                tooltip: 'Resim Ekle (64)...',
+                onAction: function (_) {
+                    fileInput.trigger('click');
+                }
+            });
+
+            fileInput.on("change", function (e) {
+                CustomUploadImageBase64($(this), editor);
+            });
+        }
+
+        function CustomUploadImage(inp, editor)
+        {
+            var imageUploadUrl = '@Url.Content("~/tinymce/image")';
+
+            var input = inp.get(0).files[0];
+
+            var formData = new FormData();
+            formData.append('img', input, input.name);
+            formData.append('__RequestVerificationToken', GetRequestVerificationToken());
+
+            $.ajax({
+                url: imageUploadUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data, textStatus, jqXHR) {
+                    editor.insertContent(`<img src='${data.location}' alt='' />`);
+                    $("#tinymce-uploader").val(null); // !important
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    editor.insertContent(errorThrown);
+                }
+            });
+        }
+
+        function CustomUploadImageBase64(inp, editor)
+        {
+            var formData = new FormData();
+            var input = inp.get(0).files[0];
+            formData.append('img', input, input.name);
+            formData.append('__RequestVerificationToken', GetRequestVerificationToken());
+
+            var imageUploadUrl = '@Url.Content("~/tinymce/image-base64")';
+
+            $.ajax({
+                url: imageUploadUrl,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: function (data, textStatus, jqXHR) {
+                    editor.insertContent(`<img src='${data.imgData}' alt='' />`);
+                    $("#tinymce-uploader").val(null); // !important
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    editor.insertContent(errorThrown);
+                }
+            });
+        }
+
+        // E: Custom Image Upload URL *******
+
+        function InsertHtmlButton(editor) {
+            editor.ui.registry.addButton('HtmlInsertButton', {
+                icon: 'embed-page', //https://www.tiny.cloud/docs/advanced/editor-icon-identifiers/
+                //text: 'Insert Html',
+                tooltip: 'HTML Ekle...',
+                onAction: function (_) {
+                    Dialog.open(editor);
+                }
+            });
+
+            var setContent = function (editor, html) {
+                editor.focus();
+                editor.undoManager.transact(function () {
+                    editor.setContent(html);
+                });
+                editor.selection.setCursorLocation();
+                editor.nodeChanged();
+            };
+
+            var getContent = function (editor) {
+                return editor.getContent({ source_view: true });
+            };
+
+            var Content = {
+                setContent: setContent,
+                getContent: getContent
+            };
+
+            var open = function (editor) {
+                var editorContent = Content.getContent(editor);
+
+                editor.windowManager.open({
+                    title: 'Html Code',
+                    size: 'large',
+                    body: {
+                        type: 'panel',
+                        items: [{ type: 'textarea', name: 'code' }]
+                    },
+                    buttons: [
+                        { type: 'cancel', name: 'cancel', text: 'Cancel' },
+                        { type: 'submit', name: 'save', text: 'Save', primary: true }
+                    ],
+                    initialData: { code: "" },
+                    onSubmit: function (api) {
+                        editor.insertContent(api.getData().code);
+                        api.close();
+                    }
+                });
+            };
+
+            var Dialog = { open: open };
+        }
+
+        function ScrollToEnd(editor) {
+            editor.on('init', function () {
+                editor.focus();
+                editor.selection.select(editor.getBody(), true);
+                editor.selection.collapse(false);
+                editor.getWin().scrollTo(0, editor.getBody().scrollHeight);
+            });
+        }
+
+        function CustomTextButton(editor) {
+            editor.ui.registry.addButton('InsertDateTimeButton', {
+                icon: 'insert-time',
+                tooltip: 'Zaman Damgası Ekle',
+                onAction: function (_)
+                {
+                    var date = new Date();
+                    editor.insertContent('<pre>' + date.toLocaleDateString('tr-TR') + ' ' + date.toLocaleTimeString('tr-TR') + '</pre>');
+                }
+            });
+        }
+
+    </script>
+}

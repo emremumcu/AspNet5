@@ -1,0 +1,23 @@
+﻿@*PM> Install-Package Markdig -Version 0.26.0*@
+@using Markdig
+
+@{
+    string ReadMe()
+    {
+        var pipeline = new MarkdownPipelineBuilder()
+            .UseAdvancedExtensions()
+            .Build();
+
+        string qs = Context.Request.QueryString.ToString();
+
+        string docPath = $"AppData/{qs.Remove(0, 1)}.md";
+
+        string readmeStr = (System.IO.File.Exists(docPath)) ? System.IO.File.ReadAllText(docPath) : "Document not found!";        
+
+        return Markdown.ToHtml(readmeStr, pipeline);
+    }
+}
+
+<div class="container-lg bg-light rounded-3 p-5 small" style="text-align: justify">
+    @Html.Raw(ReadMe())
+</div>
