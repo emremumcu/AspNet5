@@ -1,4 +1,4 @@
-﻿// HACK Warnings
+﻿// HACK: Warnings
 //#if DEBUG 
 //#warning WARNING: Running in DEBUG
 //#else
